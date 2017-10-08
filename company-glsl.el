@@ -157,14 +157,22 @@
         (cons buffer-file-name (string-to-number linenum))
       (cons buffer-file-name 0))))
 
+(member "vec3" glsl-type-list)
+
+(defun company-glsl--match-arg (arg type)
+  "ARG TYPE."
+  (string-match-p (regexp-quote arg) type))
+
 (defun company-glsl--extended-candidates (arg)
   "Extends parsed candidates based on ARG with type/modifier/builtin lists as provided by glsl-mode."
-  (append (company-glsl--candidates arg)
-          glsl-type-list
-          glsl-modifier-list
-          glsl-deprecated-modifier-list
-          glsl-builtin-list
-          glsl-deprecated-builtin-list))
+  (let ((candidates (append glsl-type-list
+                            glsl-modifier-list
+                            glsl-deprecated-modifier-list
+                            glsl-builtin-list
+                            glsl-deprecated-builtin-list
+                            (company-glsl--candidates arg))))
+    (cl-remove-if-not (lambda (type) (company-glsl--match-arg arg type))
+                      candidates)))
 
 (defun company-glsl (command &optional arg &rest ignored)
   "Provide GLSL completion info according to prefix COMMAND and ARG.  IGNORED is not used."

@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/guidoschmidt/company-glsl.svg?branch=master)](https://travis-ci.org/guidoschmidt/company-glsl)
+
 # Company GLSL
 
 **FORKED FROM:** [Kaali/company-glsl](https://github.com/Kaali/company-glsl)

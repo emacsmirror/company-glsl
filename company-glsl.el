@@ -151,6 +151,11 @@
         (cons buffer-file-name (string-to-number linenum))
       (cons buffer-file-name 0))))
 
+(defun company-glsl--advanced-cadidates (arg)
+  (if (= (length arg) 0)
+      glsl-type-list
+    (company-glsl--candidates arg)))
+
 (defun company-glsl (command &optional arg &rest ignored)
   "`company-mode' completion back-end for GLSL."
   (interactive (list 'interactive))
@@ -160,7 +165,7 @@
                  buffer-file-name
                  (or (company-grab-symbol-cons "\\." 1)
                      'stop)))
-    (candidates (company-glsl--candidates arg))
+    (candidates (company-glsl--advanced-cadidates arg))
     (sorted t)
     (duplicates t)
     (meta (get-text-property 0 'meta arg))

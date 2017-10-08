@@ -152,9 +152,12 @@
       (cons buffer-file-name 0))))
 
 (defun company-glsl--advanced-cadidates (arg)
-  (if (= (length arg) 0)
-      glsl-type-list
-    (company-glsl--candidates arg)))
+  (append (company-glsl--candidates arg)
+          glsl-type-list
+          glsl-modifier-list
+          glsl-deprecated-modifier-list
+          glsl-builtin-list
+          glsl-deprecated-builtin-list))
 
 (defun company-glsl (command &optional arg &rest ignored)
   "`company-mode' completion back-end for GLSL."

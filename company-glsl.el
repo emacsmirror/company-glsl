@@ -1,11 +1,14 @@
 ;;; company-glsl.el --- Support glsl in company-mode
 
-;; Copyright (C) 2015 Väinö Järvelä <vaino@jarve.la>
-;;
-;; Author: Väinö Järvelä <vaino@jarve.la>
-;; Created: 11 January 2015
-;; Version: 0.5
-;; Package-Requires: ((company "0.8.7"))
+;; Copyright (C) 2017 Guido Schmidt
+
+;; Author: Guido Schmidt <git@guidoschmidt.cc>
+;; Original Author: Väinö Järvelä <vaino@jarve.la>
+;; Created: 08 October 2017
+;; Original Created: 11 January 2015
+;; Version: 0.2
+;; Package-Requires: ((company "0.9.4")
+;;                    (glsl-mode "2.0"))
 
 ;;; License:
 ;; This file is not part of GNU Emacs.
@@ -27,33 +30,28 @@
 ;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
+;; Provides a company completion backend glslangValidator and filtered
+;; lists provided by `glsl-mode'.
+;;
+;; Download & build `glslangValidator' from KhronosGroup:
+;; https://github.com/KhronosGroup/glslang
+;;
+;; Setup:
+;; (use-package company-glsl
+;;   :config
+;;   (when (executable-find "glslangValidator")
+;;     (add-to-list 'company-backends 'company-glsl)))
 
-;; Provides glsl completion by using glslangValidator.
-;; glslangValidator can be found from:
-;;   https://www.khronos.org/opengles/sdk/tools/Reference-Compiler/
-
-;; To use this package with company-mode run;
-;;   (add-to-list 'company-backends 'company-glsl)
-
-;; To use this package, you must be in glsl major mode.
-
-;; This package is still quite incomplete, but it does basic symbol
-;; completion.  It finds all the symbols that are referenced in the
-;; code or references by the linker.  It can also reference function
-;; names, but at the moment no other information is retained.
-
-;; There is also no scoping, so completion candidates includes all
-;; symbols, even if they are not available in the current scope.  Even
-;; any function parameters are seen as candidates in all other
-;; functions.
-
-;; TODO: Do a better single pass parser which properly detects
-;;       functions and only symbols assigned to.
-
-;; TODO: Symbol scope
+;;; Change Log:
+;; 0.2 (Guido Schmidt)
+;; - Add glsl-mode type & builtin support
+;; - Clean package (doc strings, commentary section)
+;;
+;; 0.1 (Väinö Järvelä)
+;; - Basic symbol completion
+;; - Reference to function names
 
 ;;; Code:
-
 (require 'cl-lib)
 (require 'company)
 (require 'glsl-mode)
@@ -67,14 +65,14 @@
   (string-match-p "block{" type))
 
 (defun company-glsl--propertize (symbol type linenum)
-  "Propertize a given SYMBOL with a TYPE and LINENUM."
+  "Propertize a given SYMBOL with a TYPE and line number LINENUM."
   (propertize
    symbol
    'meta type
    'linenum linenum))
 
 (defun company-glsl--parse-block (block linenum &optional parent)
-  "Parse a BLOCK from line number LINENUM and optional argument PARENT."
+  "Parse a BLOCK at line number LINENUM and optional argument PARENT."
   (with-temp-buffer
     (insert block)
     (goto-char (point-min))
@@ -90,7 +88,7 @@
               linenum))))
 
 (defun company-glsl--parse-match (symbol type linenum)
-  "Parse a SYMBOL with TYPE and its line number LINENUM."
+  "Parse a SYMBOL with TYPE at line number LINENUM."
   (if (company-glsl--is-anon symbol)
       (company-glsl--parse-block type linenum)
     (if (company-glsl--has-block type)
@@ -99,7 +97,7 @@
       (list (company-glsl--propertize symbol type linenum)))))
 
 (defun company-glsl--parse-func (funcname linenum)
-  "Propertize a function with FUNCNAME with it's line number LINENUM."
+  "Propertize a function with its name FUNCNAME and its line number LINENUM."
   (company-glsl--propertize funcname "function" linenum))
 
 (defun company-glsl--get-types (filename)
@@ -124,14 +122,16 @@
       (append funcs vars))))
 
 (defun company-glsl--fuzzy-match-prefix (prefix candidate)
+  "Fuzzy match a PREFIX to a CANDIDATE."
   (cl-subsetp (string-to-list prefix)
               (string-to-list candidate)))
 
 (defun company-glsl--match-prefix (prefix candidate)
+  "Match a PREFIX with a CANDIDATE."
   (string-prefix-p prefix candidate))
 
-
 (defun company-glsl--property-linenum (prop)
+  "Get the linenum by its PROP."
   (let ((linenum (get-text-property 0 'linenum prop)))
     (if (eq linenum "?")
         0
@@ -152,19 +152,18 @@
    'company-glsl--candidate-sorter))
 
 (defun company-glsl--location (arg)
+  "Get the location of an ARG."
   (let ((linenum (get-text-property 0 'linenum arg)))
     (if (not (eq "?" linenum))
         (cons buffer-file-name (string-to-number linenum))
       (cons buffer-file-name 0))))
 
-(member "vec3" glsl-type-list)
-
 (defun company-glsl--match-arg (arg type)
-  "ARG TYPE."
+  "Check the company prefix ARG against a TYPE."
   (string-match-p (regexp-quote arg) type))
 
 (defun company-glsl--extended-candidates (arg)
-  "Extends parsed candidates based on ARG with type/modifier/builtin lists as provided by glsl-mode."
+  "Extends parsed candidates based on ARG with type/modifier/builtin lists as provided by ‘glsl-mode’."
   (let ((candidates (append glsl-type-list
                             glsl-modifier-list
                             glsl-deprecated-modifier-list

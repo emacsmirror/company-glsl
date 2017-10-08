@@ -4,11 +4,10 @@
 ;;
 ;; Author: Väinö Järvelä <vaino@jarve.la>
 ;; Created: 11 January 2015
-;; Version: 0.1
+;; Version: 0.5
 ;; Package-Requires: ((company "0.8.7"))
 
 ;;; License:
-
 ;; This file is not part of GNU Emacs.
 ;; However, it is distributed under the same license.
 
@@ -36,21 +35,17 @@
 ;; To use this package with company-mode run;
 ;;   (add-to-list 'company-backends 'company-glsl)
 
-;; To use this package, you must be in glsl major mode. But it doesn't
-;; require any functionality from there yet.
+;; To use this package, you must be in glsl major mode.
 
 ;; This package is still quite incomplete, but it does basic symbol
-;; completion. It finds all the symbols that are referenced in the
-;; code or references by the linker. It can also reference function
+;; completion.  It finds all the symbols that are referenced in the
+;; code or references by the linker.  It can also reference function
 ;; names, but at the moment no other information is retained.
 
 ;; There is also no scoping, so completion candidates includes all
-;; symbols, even if they are not available in the current scope. Even
+;; symbols, even if they are not available in the current scope.  Even
 ;; any function parameters are seen as candidates in all other
 ;; functions.
-
-;; TODO: Include GLSL keywords, maybe from glsl-mode from
-;;       https://github.com/jimhourihan/glsl-mode
 
 ;; TODO: Do a better single pass parser which properly detects
 ;;       functions and only symbols assigned to.
@@ -59,22 +54,27 @@
 
 ;;; Code:
 
-(require 'company)
 (require 'cl-lib)
+(require 'company)
+(require 'glsl-mode)
 
 (defun company-glsl--is-anon (symbol)
+  "Check if the given SYMBOL is prefixed with `anon@'."
   (string-prefix-p "anon@" symbol))
 
 (defun company-glsl--has-block (type)
+  "Check if the given TYPE is sourrounded by `block{}'."
   (string-match-p "block{" type))
 
 (defun company-glsl--propertize (symbol type linenum)
+  "Propertize a given SYMBOL with a TYPE and LINENUM."
   (propertize
    symbol
    'meta type
    'linenum linenum))
 
 (defun company-glsl--parse-block (block linenum &optional parent)
+  "Parse a BLOCK from line number LINENUM and optional argument PARENT."
   (with-temp-buffer
     (insert block)
     (goto-char (point-min))
@@ -90,6 +90,7 @@
               linenum))))
 
 (defun company-glsl--parse-match (symbol type linenum)
+  "Parse a SYMBOL with TYPE and its line number LINENUM."
   (if (company-glsl--is-anon symbol)
       (company-glsl--parse-block type linenum)
     (if (company-glsl--has-block type)
@@ -98,9 +99,11 @@
       (list (company-glsl--propertize symbol type linenum)))))
 
 (defun company-glsl--parse-func (funcname linenum)
+  "Propertize a function with FUNCNAME with it's line number LINENUM."
   (company-glsl--propertize funcname "function" linenum))
 
 (defun company-glsl--get-types (filename)
+  "Get GLSL types from calling glslangValidator on FILENAME."
   (with-temp-buffer
     (call-process "glslangValidator" nil (list (current-buffer) nil) nil "-i" filename)
     (goto-char (point-min))
@@ -127,6 +130,7 @@
 (defun company-glsl--match-prefix (prefix candidate)
   (string-prefix-p prefix candidate))
 
+
 (defun company-glsl--property-linenum (prop)
   (let ((linenum (get-text-property 0 'linenum prop)))
     (if (eq linenum "?")
@@ -134,11 +138,13 @@
       (string-to-number linenum))))
 
 (defun company-glsl--candidate-sorter (x y)
+  "Sort parsed candidates X and Y by lineums."
   (if (string= x y)
       (< (company-glsl--property-linenum x) (company-glsl--property-linenum y))
     (string< x y)))
 
 (defun company-glsl--candidates (arg)
+ "Provide candidates pased on the prefix command ARG by parsing."
   (cl-stable-sort
    (cl-remove-if-not
     (lambda (c) (company-glsl--match-prefix arg c))
@@ -151,7 +157,8 @@
         (cons buffer-file-name (string-to-number linenum))
       (cons buffer-file-name 0))))
 
-(defun company-glsl--advanced-cadidates (arg)
+(defun company-glsl--extended-candidates (arg)
+  "Extends parsed candidates based on ARG with type/modifier/builtin lists as provided by glsl-mode."
   (append (company-glsl--candidates arg)
           glsl-type-list
           glsl-modifier-list
@@ -160,7 +167,7 @@
           glsl-deprecated-builtin-list))
 
 (defun company-glsl (command &optional arg &rest ignored)
-  "`company-mode' completion back-end for GLSL."
+  "Provide GLSL completion info according to prefix COMMAND and ARG.  IGNORED is not used."
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'company-glsl))
@@ -168,7 +175,7 @@
                  buffer-file-name
                  (or (company-grab-symbol-cons "\\." 1)
                      'stop)))
-    (candidates (company-glsl--advanced-cadidates arg))
+    (candidates (company-glsl--extended-candidates arg))
     (sorted t)
     (duplicates t)
     (meta (get-text-property 0 'meta arg))

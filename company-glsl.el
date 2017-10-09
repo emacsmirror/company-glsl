@@ -3,12 +3,13 @@
 ;; Copyright (C) 2017 Guido Schmidt
 
 ;; Author: Guido Schmidt <git@guidoschmidt.cc>
+;; Maintainer: Guido Schmidt <git@guidoschmidt.cc>
 ;; Original Author: Väinö Järvelä <vaino@jarve.la>
 ;; Created: 08 October 2017
 ;; Original Created: 11 January 2015
 ;; Version: 0.2
-;; Package-Requires: ((company "0.9.4")
-;;                    (glsl-mode "2.0"))
+;; Package-Requires: ((company "0.9.4") (glsl-mode "2.0") (emacs "24.4"))
+;; URL: https://github.com/guidoschmidt/company-glsl
 
 ;;; License:
 ;; This file is not part of GNU Emacs.

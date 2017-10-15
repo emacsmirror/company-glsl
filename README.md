@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/guidoschmidt/company-glsl.svg?branch=master)](https://travis-ci.org/guidoschmidt/company-glsl)
+[![MELPA](https://melpa.org/packages/company-glsl-badge.svg)](https://melpa.org/#/company-glsl)
 
 # Company GLSL
 

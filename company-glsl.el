@@ -174,6 +174,7 @@
     (cl-remove-if-not (lambda (type) (company-glsl--match-arg arg type))
                       candidates)))
 
+;;;###autoload
 (defun company-glsl (command &optional arg &rest ignored)
   "Provide GLSL completion info according to prefix COMMAND and ARG.  IGNORED is not used."
   (interactive (list 'interactive))

@@ -8,7 +8,7 @@
 ;; Created: 08 October 2017
 ;; Original Created: 11 January 2015
 ;; Version: 0.2
-;; Package-Requires: ((company "0.9.4") (glsl-mode "2.0") (emacs "24.4"))
+;; Package-Requires: ((company "0.9.4") (glsl-mode "2.4") (emacs "24.4"))
 ;; URL: https://github.com/guidoschmidt/company-glsl
 
 ;;; License:
@@ -166,8 +166,8 @@
 (defun company-glsl--extended-candidates (arg)
   "Extends parsed candidates based on ARG with type/modifier/builtin lists as provided by ‘glsl-mode’."
   (let ((candidates (append glsl-type-list
-                            glsl-modifier-list
-                            glsl-deprecated-modifier-list
+                            glsl-qualifier-list
+                            glsl-deprecated-qualifier-list
                             glsl-builtin-list
                             glsl-deprecated-builtin-list
                             (company-glsl--candidates arg))))
